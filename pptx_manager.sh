@@ -17,15 +17,16 @@ print_usage() {
     echo "Usage: $0 [COMMAND] [OPTIONS]"
     echo ""
     echo "Commands:"
-    echo "  setup [DIR]     Create folder structure in specified directory (default: current)"
-    echo "  process [DIR]   Process PPTX files in specified directory (default: current)"
-    echo "  clean [DIR]     Clean up processed and output folders"
-    echo "  status [DIR]    Show status of folders and files"
-    echo "  watch [DIR]     Watch input folder and auto-process new files"
+    echo "  setup [DIR]            Create folder structure in specified directory (default: current)"
+    echo "  process [DIR] [--keep] Process PPTX files (--keep leaves originals in input/)"
+    echo "  clean [DIR]            Clean up processed and output folders"
+    echo "  status [DIR]           Show status of folders and files"
+    echo "  watch [DIR]            Watch input folder and auto-process new files"
     echo ""
     echo "Examples:"
     echo "  $0 setup ./my_presentations"
     echo "  $0 process"
+    echo "  $0 process --keep"
     echo "  $0 status"
     echo "  $0 clean"
 }
@@ -71,11 +72,16 @@ setup_folders() {
 
 process_files() {
     local dir=${1:-.}
+    local keep=${2:-}
     local python_cmd=$(get_python_command)
     echo -e "${BLUE}Processing PPTX files in: $dir${NC}"
-    
-    $python_cmd "$PYTHON_SCRIPT" --dir "$dir"
-    
+
+    if [[ "$keep" == "--keep" ]]; then
+        $python_cmd "$PYTHON_SCRIPT" --dir "$dir" --keep
+    else
+        $python_cmd "$PYTHON_SCRIPT" --dir "$dir"
+    fi
+
     if [[ $? -eq 0 ]]; then
         echo -e "${GREEN}✅ Processing completed${NC}"
     else
@@ -137,27 +143,40 @@ clean_folders() {
 watch_folder() {
     local dir=${1:-.}
     local input_dir="$dir/input"
-    
+
     echo -e "${BLUE}👀 Watching $input_dir for new PPTX files...${NC}"
     echo -e "${YELLOW}Press Ctrl+C to stop${NC}"
-    
-    # Check if inotify-tools is available
-    if ! command -v inotifywait &> /dev/null; then
-        echo -e "${RED}Error: inotifywait not found. Install inotify-tools package.${NC}"
+
+    # Create input folder if it doesn't exist
+    mkdir -p "$input_dir"
+
+    # macOS: use fswatch
+    if [[ "$(uname)" == "Darwin" ]]; then
+        if ! command -v fswatch &> /dev/null; then
+            echo -e "${RED}Error: fswatch not found. Install it with: brew install fswatch${NC}"
+            exit 1
+        fi
+        fswatch -0 --event Created --event MovedTo "$input_dir" | while read -d '' event; do
+            echo -e "${YELLOW}📥 New file detected, processing...${NC}"
+            sleep 2
+            process_files "$dir"
+            echo -e "${BLUE}👀 Continuing to watch...${NC}"
+        done
+    # Linux: use inotifywait
+    elif command -v inotifywait &> /dev/null; then
+        while inotifywait -e moved_to,create "$input_dir" 2>/dev/null; do
+            echo -e "${YELLOW}📥 New file detected, processing...${NC}"
+            sleep 2
+            process_files "$dir"
+            echo -e "${BLUE}👀 Continuing to watch...${NC}"
+        done
+    else
+        echo -e "${RED}Error: No file watcher found.${NC}"
+        echo "macOS: brew install fswatch"
         echo "Ubuntu/Debian: sudo apt-get install inotify-tools"
         echo "CentOS/RHEL: sudo yum install inotify-tools"
         exit 1
     fi
-    
-    # Create input folder if it doesn't exist
-    mkdir -p "$input_dir"
-    
-    while inotifywait -e moved_to,create "$input_dir" 2>/dev/null; do
-        echo -e "${YELLOW}📥 New file detected, processing...${NC}"
-        sleep 2  # Wait a moment for file to be fully copied
-        process_files "$dir"
-        echo -e "${BLUE}👀 Continuing to watch...${NC}"
-    done
 }
 
 # Main script logic
@@ -168,7 +187,7 @@ case "$1" in
         ;;
     process)
         check_python_script
-        process_files "$2"
+        process_files "$2" "$3"
         ;;
     status)
         show_status "$2"

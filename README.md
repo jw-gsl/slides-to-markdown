@@ -5,10 +5,12 @@ A Python tool for extracting text content from PowerPoint (.pptx) files into mar
 ## Features
 
 - Extracts text from slides, tables, and grouped shapes
+- Renders tables as proper markdown tables
+- Formats bullet points with indentation levels
+- Uses slide titles as markdown headings
+- Includes speaker notes as blockquotes
 - Batch processes multiple PPTX files at once
 - Automatically organizes files into input, processed, and output folders
-- Generates well-formatted markdown with slide headings
-- Continues processing even if individual files fail
 
 ## Setup
 
@@ -33,34 +35,25 @@ A Python tool for extracting text content from PowerPoint (.pptx) files into mar
    brew install python
    ```
 
-3. **Install the dependency**
+3. **Install dependencies**
 
    ```bash
-   pip3 install python-pptx
+   pip3 install -r requirements.txt
    ```
 
-4. **Create the folder structure**
+   > On corporate/managed Macs you may need: `pip3 install --user -r requirements.txt`
 
-   ```bash
-   python3 pptx_extractor.py --setup
-   ```
-
-5. **Run it** — drop `.pptx` files into `input/` then:
+4. **Run it** — drop `.pptx` files into `input/` then:
 
    ```bash
    python3 pptx_extractor.py
    ```
 
-   You can also use the shell helper:
-
-   ```bash
-   chmod +x pptx_manager.sh
-   ./pptx_manager.sh process
-   ```
+   The `input/`, `output/`, and `processed/` folders are created automatically on first run.
 
 ### Windows
 
-1. **Clone the repo**
+1. **Clone the repo** (or [download the ZIP](https://github.com/jw-gsl/slides-to-markdown/archive/refs/heads/main.zip) and extract it)
 
    ```powershell
    git clone https://github.com/jw-gsl/slides-to-markdown.git
@@ -69,7 +62,7 @@ A Python tool for extracting text content from PowerPoint (.pptx) files into mar
 
 2. **Install Python** (if not already installed)
 
-   Download and install from [python.org](https://www.python.org/downloads/). During installation, make sure to check **"Add Python to PATH"**.
+   Download from [python.org](https://www.python.org/downloads/). During installation, check **"Add Python to PATH"**.
 
    Verify it works:
 
@@ -77,23 +70,19 @@ A Python tool for extracting text content from PowerPoint (.pptx) files into mar
    python --version
    ```
 
-3. **Install the dependency**
+3. **Install dependencies**
 
    ```powershell
-   pip install python-pptx
+   python -m pip install -r requirements.txt
    ```
 
-4. **Create the folder structure**
-
-   ```powershell
-   python pptx_extractor.py --setup
-   ```
-
-5. **Run it** — drop `.pptx` files into `input\` then:
+4. **Run it** — drop `.pptx` files into `input\` then:
 
    ```powershell
    python pptx_extractor.py
    ```
+
+   The `input\`, `output\`, and `processed\` folders are created automatically on first run.
 
 ## Usage
 
@@ -106,21 +95,33 @@ A Python tool for extracting text content from PowerPoint (.pptx) files into mar
 
 ### Command line options
 
-| Option    | Short | Description                                      |
-|-----------|-------|--------------------------------------------------|
-| `--dir`   | `-d`  | Specify base directory (default: current directory) |
-| `--setup` |       | Create folder structure only, don't process files |
-| `--help`  | `-h`  | Show help message                                |
+| Option    | Short | Description                                              |
+|-----------|-------|----------------------------------------------------------|
+| `--dir`   | `-d`  | Specify base directory (default: current directory)      |
+| `--keep`  | `-k`  | Keep originals in input/ instead of moving to processed/ |
+| `--setup` |       | Create folder structure only, don't process files        |
+| `--help`  | `-h`  | Show help message                                        |
 
-### Shell manager (macOS/Linux)
+### Helper scripts
 
-The `pptx_manager.sh` script provides additional commands:
+**macOS/Linux** — `pptx_manager.sh`:
 
 ```bash
-./pptx_manager.sh setup      # Create folder structure
-./pptx_manager.sh process    # Process PPTX files
-./pptx_manager.sh status     # Show folder status and file counts
-./pptx_manager.sh clean      # Remove processed and output files
+chmod +x pptx_manager.sh
+./pptx_manager.sh process          # Process PPTX files
+./pptx_manager.sh process --keep   # Process but keep originals
+./pptx_manager.sh status           # Show folder status and file counts
+./pptx_manager.sh clean            # Remove processed and output files
+./pptx_manager.sh watch            # Auto-process new files (requires fswatch)
+```
+
+**Windows** — `pptx_manager.ps1`:
+
+```powershell
+.\pptx_manager.ps1 process         # Process PPTX files
+.\pptx_manager.ps1 process -Keep   # Process but keep originals
+.\pptx_manager.ps1 status          # Show folder status and file counts
+.\pptx_manager.ps1 clean           # Remove processed and output files
 ```
 
 ## Project Structure
@@ -129,41 +130,50 @@ The `pptx_manager.sh` script provides additional commands:
 slides-to-markdown/
 ├── pptx_extractor.py    # Main extraction script
 ├── pptx_manager.sh      # Shell helper (macOS/Linux)
+├── pptx_manager.ps1     # PowerShell helper (Windows)
+├── requirements.txt     # Python dependencies
 ├── input/               # Place .pptx files here
 ├── processed/           # Originals moved here after extraction
-└── output/              # Extracted text files
+└── output/              # Generated markdown files
 ```
 
 ## Output Format
 
+The script uses slide titles as headings, renders tables as markdown, and appends speaker notes as blockquotes:
+
 ```markdown
 # My Presentation
 
-## Slide 1
+## Welcome & Overview
 
-Welcome to Our Presentation
-Introduction and Overview
+Introduction to the topic
+Key objectives for today
 
-## Slide 2
+## Q3 Revenue
 
-Key Points:
-- Point one
-- Point two
+| Quarter | Revenue | Growth |
+| --- | --- | --- |
+| Q1 | $100K | 5% |
+| Q2 | $120K | 8% |
+
+**Notes:**
+> Remember to mention the partnership deal
 ```
 
 ## Supported Content
 
 - Text boxes and shapes
-- Slide titles and content
-- Bullet points and numbered lists
-- Tables (all cells)
+- Slide titles (used as `##` headings)
+- Bullet points with nesting levels
+- Tables (rendered as markdown tables)
 - Grouped shapes
+- Speaker notes (as blockquotes)
 
 ## Troubleshooting
 
 **"No PPTX files found"** — Make sure files are in the `input/` folder, not the root directory.
 
-**"Module not found"** — Run `pip install python-pptx` (or `pip3` on macOS).
+**"Module not found"** — Run `pip install -r requirements.txt` (or `pip3` on macOS).
 
 **"Permission denied"** — Close PowerPoint if the files are open, and check folder permissions.
 
