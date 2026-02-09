@@ -16,14 +16,36 @@ A Python tool for extracting text content from PowerPoint (.pptx) files into mar
 
 ### macOS
 
-1. **Clone the repo**
+1. **Install Git** (if not already installed)
+
+   Check if Git is available:
+
+   ```bash
+   git --version
+   ```
+
+   If you see `command not found`, install it using one of these options:
+
+   - **Xcode Command Line Tools** (recommended — will prompt automatically when you run `git`):
+
+     ```bash
+     xcode-select --install
+     ```
+
+   - **Homebrew**:
+
+     ```bash
+     brew install git
+     ```
+
+2. **Clone the repo**
 
    ```bash
    git clone https://github.com/jw-gsl/slides-to-markdown.git
    cd slides-to-markdown
    ```
 
-2. **Check Python is installed** (macOS ships with Python 3 on recent versions)
+3. **Check Python is installed** (macOS ships with Python 3 on recent versions)
 
    ```bash
    python3 --version
@@ -35,7 +57,7 @@ A Python tool for extracting text content from PowerPoint (.pptx) files into mar
    brew install python
    ```
 
-3. **Install dependencies**
+4. **Install dependencies**
 
    ```bash
    pip3 install -r requirements.txt
@@ -43,7 +65,7 @@ A Python tool for extracting text content from PowerPoint (.pptx) files into mar
 
    > On corporate/managed Macs you may need: `pip3 install --user -r requirements.txt`
 
-4. **Run it** — drop `.pptx` files into `input/` then:
+5. **Run it** — drop `.pptx` files into `input/` then:
 
    ```bash
    python3 pptx_extractor.py
@@ -53,14 +75,26 @@ A Python tool for extracting text content from PowerPoint (.pptx) files into mar
 
 ### Windows
 
-1. **Clone the repo** (or [download the ZIP](https://github.com/jw-gsl/slides-to-markdown/archive/refs/heads/main.zip) and extract it)
+1. **Install Git** (if not already installed)
+
+   Check if Git is available:
+
+   ```powershell
+   git --version
+   ```
+
+   If it's not recognized, download and install [Git for Windows](https://git-scm.com/download/win). Use the default settings during installation.
+
+   > **Don't want to install Git?** You can skip this step and [download the ZIP](https://github.com/jw-gsl/slides-to-markdown/archive/refs/heads/main.zip) instead — extract it and open the folder in your terminal.
+
+2. **Clone the repo**
 
    ```powershell
    git clone https://github.com/jw-gsl/slides-to-markdown.git
    cd slides-to-markdown
    ```
 
-2. **Install Python** (if not already installed)
+3. **Install Python** (if not already installed)
 
    Download from [python.org](https://www.python.org/downloads/). During installation, check **"Add Python to PATH"**.
 
@@ -70,13 +104,13 @@ A Python tool for extracting text content from PowerPoint (.pptx) files into mar
    python --version
    ```
 
-3. **Install dependencies**
+4. **Install dependencies**
 
    ```powershell
    python -m pip install -r requirements.txt
    ```
 
-4. **Run it** — drop `.pptx` files into `input\` then:
+5. **Run it** — drop `.pptx` files into `input\` then:
 
    ```powershell
    python pptx_extractor.py
