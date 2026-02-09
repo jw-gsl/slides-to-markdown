@@ -1,9 +1,14 @@
 #!/usr/bin/env python3
 
 from pptx import Presentation
+import json
+import platform
 import shutil
 import argparse
 from pathlib import Path
+
+SCRIPT_DIR = Path(__file__).resolve().parent
+CONFIG_FILE = SCRIPT_DIR / '.slides-config.json'
 
 
 def extract_table_as_markdown(table):
@@ -122,6 +127,124 @@ def create_folder_structure(base_dir, quiet=False):
     return folders
 
 
+# --- Config & interactive setup ---
+
+def load_config():
+    """Load saved config, or return None if no config exists."""
+    if CONFIG_FILE.exists():
+        try:
+            with open(CONFIG_FILE, 'r') as f:
+                return json.load(f)
+        except (json.JSONDecodeError, OSError):
+            pass
+    return None
+
+
+def save_config(working_dir):
+    """Save the chosen working directory to config."""
+    config = {'working_dir': str(working_dir)}
+    with open(CONFIG_FILE, 'w') as f:
+        json.dump(config, f, indent=2)
+    print(f"\nSaved to {CONFIG_FILE}")
+    print(f"Future runs will use: {working_dir}")
+    print(f"(Override anytime with --dir or re-run --setup)\n")
+
+
+def get_default_options():
+    """Return a list of sensible default directory options for the current platform."""
+    home = Path.home()
+    options = []
+
+    # Option 1: script directory (always available)
+    options.append(('Here (next to the script)', SCRIPT_DIR))
+
+    # Platform-specific suggestions
+    if platform.system() == 'Darwin':
+        desktop = home / 'Desktop' / 'slides-to-markdown'
+        documents = home / 'Documents' / 'slides-to-markdown'
+        options.append(('Desktop', desktop))
+        options.append(('Documents', documents))
+    elif platform.system() == 'Windows':
+        desktop = home / 'Desktop' / 'slides-to-markdown'
+        documents = home / 'Documents' / 'slides-to-markdown'
+        options.append(('Desktop', desktop))
+        options.append(('Documents', documents))
+    else:
+        options.append(('Home folder', home / 'slides-to-markdown'))
+
+    return options
+
+
+def interactive_setup():
+    """Guide the user through choosing a working directory."""
+    print("=" * 50)
+    print("  Slides to Markdown — First-time Setup")
+    print("=" * 50)
+    print()
+    print("Where would you like the working folders")
+    print("(input/, output/, processed/) to be created?")
+    print()
+
+    options = get_default_options()
+
+    for i, (label, path) in enumerate(options, 1):
+        print(f"  [{i}] {label}")
+        print(f"      {path}")
+        print()
+
+    custom_num = len(options) + 1
+    print(f"  [{custom_num}] Custom path")
+    print()
+
+    while True:
+        try:
+            choice = input(f"Choose an option [1-{custom_num}]: ").strip()
+            choice_num = int(choice)
+
+            if 1 <= choice_num <= len(options):
+                _, chosen_path = options[choice_num - 1]
+                break
+            elif choice_num == custom_num:
+                custom = input("Enter the full path: ").strip()
+                if not custom:
+                    print("No path entered. Please try again.")
+                    continue
+                chosen_path = Path(custom).expanduser().resolve()
+                break
+            else:
+                print(f"Please enter a number between 1 and {custom_num}.")
+        except ValueError:
+            print(f"Please enter a number between 1 and {custom_num}.")
+        except (KeyboardInterrupt, EOFError):
+            print("\nSetup cancelled.")
+            return None
+
+    chosen_path = Path(chosen_path).resolve()
+
+    print(f"\nSetting up in: {chosen_path}")
+    create_folder_structure(chosen_path)
+    save_config(chosen_path)
+
+    return chosen_path
+
+
+def resolve_working_dir(cli_dir=None):
+    """Determine the working directory from CLI args, saved config, or interactive setup."""
+    # Explicit --dir always wins
+    if cli_dir and cli_dir != '.':
+        return Path(cli_dir).resolve()
+
+    # Check for saved config
+    config = load_config()
+    if config and 'working_dir' in config:
+        saved = Path(config['working_dir'])
+        if saved.exists():
+            return saved.resolve()
+
+    # No config and no explicit dir — default to script directory
+    return SCRIPT_DIR
+
+
 def process_pptx_files(base_dir, keep=False):
     """Process all PPTX files in the input directory."""
     folders = create_folder_structure(base_dir, quiet=True)
@@ -175,22 +298,21 @@ def process_pptx_files(base_dir, keep=False):
 def main():
     parser = argparse.ArgumentParser(description='Extract text from PowerPoint files to markdown')
     parser.add_argument('--dir', '-d', default='.',
-                        help='Base directory for folder structure (default: current directory)')
+                        help='Specify working directory (overrides saved config)')
     parser.add_argument('--setup', action='store_true',
-                        help='Only create folder structure without processing files')
+                        help='Run interactive setup to choose working directory')
     parser.add_argument('--keep', '-k', action='store_true',
                         help='Keep original files in input/ instead of moving to processed/')
 
     args = parser.parse_args()
 
-    base_dir = Path(args.dir).resolve()
-    print(f"Working in: {base_dir}")
-
     if args.setup:
-        create_folder_structure(base_dir)
-        print("\nFolder structure created. Place your PPTX files in the 'input' folder and run without --setup flag.")
-    else:
-        process_pptx_files(base_dir, keep=args.keep)
+        interactive_setup()
+        return
+
+    base_dir = resolve_working_dir(args.dir)
+    print(f"Working in: {base_dir}")
+    process_pptx_files(base_dir, keep=args.keep)
 
 
 if __name__ == "__main__":

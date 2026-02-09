@@ -65,13 +65,21 @@ A Python tool for extracting text content from PowerPoint (.pptx) files into mar
 
    > On corporate/managed Macs you may need: `pip3 install --user -r requirements.txt`
 
-5. **Run it** — drop `.pptx` files into `input/` then:
+5. **Choose where to put your working folders**
+
+   Run the interactive setup to pick where `input/`, `output/`, and `processed/` are created:
+
+   ```bash
+   python3 pptx_extractor.py --setup
+   ```
+
+   This will offer options like Desktop, Documents, or a custom path. Your choice is saved so you don't need to set it again.
+
+6. **Run it** — drop `.pptx` files into `input/` then:
 
    ```bash
    python3 pptx_extractor.py
    ```
-
-   The `input/`, `output/`, and `processed/` folders are created automatically on first run.
 
 ### Windows
 
@@ -110,13 +118,21 @@ A Python tool for extracting text content from PowerPoint (.pptx) files into mar
    python -m pip install -r requirements.txt
    ```
 
-5. **Run it** — drop `.pptx` files into `input\` then:
+5. **Choose where to put your working folders**
+
+   Run the interactive setup to pick where `input\`, `output\`, and `processed\` are created:
+
+   ```powershell
+   python pptx_extractor.py --setup
+   ```
+
+   This will offer options like Desktop, Documents, or a custom path. Your choice is saved so you don't need to set it again.
+
+6. **Run it** — drop `.pptx` files into `input\` then:
 
    ```powershell
    python pptx_extractor.py
    ```
-
-   The `input\`, `output\`, and `processed\` folders are created automatically on first run.
 
 ## Usage
 
@@ -131,9 +147,9 @@ A Python tool for extracting text content from PowerPoint (.pptx) files into mar
 
 | Option    | Short | Description                                              |
 |-----------|-------|----------------------------------------------------------|
-| `--dir`   | `-d`  | Specify base directory (default: current directory)      |
+| `--setup` |       | Interactive setup — choose where working folders live    |
+| `--dir`   | `-d`  | Override working directory for this run                   |
 | `--keep`  | `-k`  | Keep originals in input/ instead of moving to processed/ |
-| `--setup` |       | Create folder structure only, don't process files        |
 | `--help`  | `-h`  | Show help message                                        |
 
 ### Helper scripts

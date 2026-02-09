@@ -16,6 +16,9 @@ env/
 # PowerPoint temp files
 ~$*.pptx
 
+# User config (saved working directory choice)
+.slides-config.json
+
 # Working directories (contain user files)
 input/
 output/
