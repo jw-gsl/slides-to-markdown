@@ -1,13 +1,13 @@
 # Slides to Markdown
 
-A Python tool for extracting text content from PowerPoint (.pptx) files into clean, readable text files. Drop your slides into the `input/` folder, run the script, and get extracted text in `output/`.
+A Python tool for extracting text content from PowerPoint (.pptx) files into markdown (.md) files. Drop your slides into the `input/` folder, run the script, and get markdown files in `output/`.
 
 ## Features
 
 - Extracts text from slides, tables, and grouped shapes
 - Batch processes multiple PPTX files at once
 - Automatically organizes files into input, processed, and output folders
-- Generates well-formatted text with slide separators
+- Generates well-formatted markdown with slide headings
 - Continues processing even if individual files fail
 
 ## Setup
@@ -101,7 +101,7 @@ A Python tool for extracting text content from PowerPoint (.pptx) files into cle
 
 1. Place your `.pptx` files in the `input/` folder
 2. Run `python3 pptx_extractor.py` (or `python` on Windows)
-3. Find extracted text in `output/`
+3. Find markdown files in `output/`
 4. Originals are automatically moved to `processed/`
 
 ### Command line options
@@ -136,13 +136,15 @@ slides-to-markdown/
 
 ## Output Format
 
-```
---- Slide 1 ---
+```markdown
+# My Presentation
+
+## Slide 1
 
 Welcome to Our Presentation
 Introduction and Overview
 
---- Slide 2 ---
+## Slide 2
 
 Key Points:
 - Point one

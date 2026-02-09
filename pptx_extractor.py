@@ -32,8 +32,12 @@ def extract_text_from_pptx(file_path):
     prs = Presentation(file_path)
     text_runs = []
 
+    # Add document title as h1
+    base_name = Path(file_path).stem
+    text_runs.append(f"# {base_name}\n")
+
     for slide_number, slide in enumerate(prs.slides, start=1):
-        text_runs.append(f"\n--- Slide {slide_number} ---\n")
+        text_runs.append(f"## Slide {slide_number}\n")
         for shape in slide.shapes:
             text_runs.extend(extract_text_from_shape(shape))
 
@@ -86,7 +90,7 @@ def process_pptx_files(base_dir):
             
             # Create output text file
             base_name = pptx_file.stem
-            output_file = output_dir / f"{base_name}.txt"
+            output_file = output_dir / f"{base_name}.md"
             
             with open(output_file, "w", encoding="utf-8") as f:
                 f.write(extracted_text)
