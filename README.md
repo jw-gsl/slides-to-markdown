@@ -1,6 +1,6 @@
 # Slides to Markdown
 
-A Python tool for extracting text content from PowerPoint (.pptx) files into markdown (.md) files. Drop your slides into the `input/` folder, run the script, and get markdown files in `output/`.
+A Python tool for extracting text content from PowerPoint (`.pptx`) files into markdown (`.md`) files. Use the batch workflow with `input/` and `output/`, or convert a single deck directly to a specific markdown path.
 
 ## Features
 
@@ -9,7 +9,9 @@ A Python tool for extracting text content from PowerPoint (.pptx) files into mar
 - Formats bullet points with indentation levels
 - Uses slide titles as markdown headings
 - Includes speaker notes as blockquotes
+- Applies light markdown cleanup to reduce layout-driven spacing artifacts
 - Batch processes multiple PPTX files at once
+- Supports direct single-file conversion with explicit output paths
 - Automatically organizes files into input, processed, and output folders
 
 ## Setup
@@ -143,6 +145,18 @@ A Python tool for extracting text content from PowerPoint (.pptx) files into mar
 3. Find markdown files in `output/`
 4. Originals are automatically moved to `processed/`
 
+### Direct single-file conversion
+
+Convert one deck without using the batch folders:
+
+```bash
+python3 pptx_extractor.py \
+  --input-file "/path/to/deck.pptx" \
+  --output-file "/path/to/output/deck.md"
+```
+
+If `--output-file` is omitted, the markdown is written next to the source deck using the same basename.
+
 ### Command line options
 
 | Option    | Short | Description                                              |
@@ -150,6 +164,8 @@ A Python tool for extracting text content from PowerPoint (.pptx) files into mar
 | `--setup` |       | Interactive setup — choose where working folders live    |
 | `--dir`   | `-d`  | Override working directory for this run                   |
 | `--keep`  | `-k`  | Keep originals in input/ instead of moving to processed/ |
+| `--input-file` |   | Convert a single PPTX file directly                      |
+| `--output-file` |  | Write markdown to a specific file (requires `--input-file`) |
 | `--help`  | `-h`  | Show help message                                        |
 
 ### Helper scripts

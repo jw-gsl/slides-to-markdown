@@ -5,6 +5,7 @@ import json
 import platform
 import shutil
 import argparse
+import re
 from pathlib import Path
 
 SCRIPT_DIR = Path(__file__).resolve().parent
@@ -76,6 +77,21 @@ def extract_notes(slide):
     return None
 
 
+def clean_markdown(text):
+    """Apply light normalization to extracted markdown."""
+    text = '\n'.join(line.rstrip() for line in text.splitlines())
+    text = re.sub(r"\n{3,}", "\n\n", text)
+
+    cleaned_lines = []
+    for line in text.splitlines():
+        if re.match(r"^\s*[-*>#|]", line):
+            cleaned_lines.append(line)
+        else:
+            cleaned_lines.append(re.sub(r"(?<=\S) {2,}(?=\S)", " ", line))
+
+    return '\n'.join(cleaned_lines).strip() + '\n'
+
+
 def extract_text_from_pptx(file_path):
     """Extract all text from a PPTX file and return as markdown."""
     prs = Presentation(file_path)
@@ -105,7 +121,24 @@ def extract_text_from_pptx(file_path):
             quoted = '\n'.join(f'> {line}' for line in notes.split('\n'))
             text_runs.append(f"\n**Notes:**\n{quoted}")
 
-    return "\n\n".join(text_runs)
+    return clean_markdown("\n\n".join(text_runs))
+
+
+def process_single_pptx(input_file, output_file=None):
+    """Process a single PPTX file without using the input/output/processed folders."""
+    input_path = Path(input_file).expanduser().resolve()
+    if not input_path.exists():
+        raise FileNotFoundError(f"Input PPTX not found: {input_path}")
+
+    if output_file:
+        output_path = Path(output_file).expanduser().resolve()
+    else:
+        output_path = input_path.with_suffix('.md')
+
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    extracted_text = extract_text_from_pptx(input_path)
+    output_path.write_text(extracted_text, encoding="utf-8")
+    print(f"  -> {output_path}")
 
 
 def create_folder_structure(base_dir, quiet=False):
@@ -303,11 +336,23 @@ def main():
                         help='Run interactive setup to choose working directory')
     parser.add_argument('--keep', '-k', action='store_true',
                         help='Keep original files in input/ instead of moving to processed/')
+    parser.add_argument('--input-file',
+                        help='Convert a single PPTX file directly')
+    parser.add_argument('--output-file',
+                        help='Write markdown to this file (works with --input-file)')
 
     args = parser.parse_args()
 
     if args.setup:
         interactive_setup()
+        return
+
+    if args.output_file and not args.input_file:
+        parser.error('--output-file requires --input-file')
+
+    if args.input_file:
+        print(f"Processing single file: {Path(args.input_file).expanduser().resolve()}")
+        process_single_pptx(args.input_file, args.output_file)
         return
 
     base_dir = resolve_working_dir(args.dir)
